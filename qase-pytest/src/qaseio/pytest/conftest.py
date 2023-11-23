@@ -6,6 +6,7 @@ from qaseio.pytest.options import QasePytestOptions
 import os
 import json
 
+
 def pytest_addoption(parser):
     group = parser.getgroup("qase")
 
@@ -18,6 +19,7 @@ def pytest_addoption(parser):
         group.addoption(f"--qase-{key_arg}", action="store", default=default_value)
 
     QasePytestOptions.addoptions(parser, group)
+
 
 def pytest_configure(config):
     if not hasattr(config, "workerinput"):
@@ -54,22 +56,30 @@ def pytest_configure(config):
 
     if mode:
         defaultReporter = QaseReport(
-                report_path=config.getoption("qase_report_connection_local_path", "./build/qase-report"),
-                format=config.getoption("qase_report_connection_local_format", "json"),
-                environment=config.getoption("qase_environment", "local"),
-            )
+            report_path=config.getoption("qase_report_connection_local_path", "./build/qase-report"),
+            format=config.getoption("qase_report_connection_local_format", "json"),
+            environment=config.getoption("qase_environment", "local"),
+        )
         if (mode == 'testops'):
             if validate_testops_options(config):
-                if (config.getoption("qase_testops_plan_id", None) is not None):
+                if config.getoption(
+                        "qase_testops_plan_id"
+                ) or config.getoption("qase_testops_run_id"):
                     from qaseio.commons import TestOpsPlanLoader
 
                     # Load test plan data from Qase TestOps
                     loader = TestOpsPlanLoader(
                         api_token=config.getoption("qase_testops_api_token"),
-                        host=config.getoption("qase_testops_api_host", "qase.io"),
+                        host=config.getoption(
+                            "qase_testops_api_host", "qase.io"
+                        ),
                     )
-                    execution_plan = loader.load(config.getoption("qase_testops_project"),
-                                                 int(config.getoption("qase_testops_plan_id")))
+                    execution_plan = loader.load(
+                        config.getoption("qase_testops_project"),
+                        int(config.getoption("qase_testops_plan_id")),
+                        config.getoption("qase_testops_run_id"),
+                        config.getoption("qase_testops_rerun_failures"),
+                    )
 
                 reporter = QaseTestOps(
                     api_token=config.getoption("qase_testops_api_token"),
@@ -105,23 +115,26 @@ def pytest_configure(config):
         config.pluginmanager.register(
             config.qaseio,
             name="qase-pytest",
-        ) 
+        )
+
 
 def validate_testops_options(config) -> bool:
     if not config.getoption("qase_testops_api_token", None):
         print("[QASE] ⚠️  Qase TestOps API token is required")
         return False
-    
+
     if not config.getoption("qase_testops_project", None):
         print("[QASE] ⚠️  Qase TestOps project code is required")
         return False
 
     return True
 
+
 def is_xdist_enabled(config):
     if (config.pluginmanager.getplugin("xdist") is not None and os.getenv('PYTEST_XDIST_WORKER_COUNT') is not None):
         return True
     return False
+
 
 def pytest_unconfigure(config):
     qaseio = getattr(config, "src", None)
