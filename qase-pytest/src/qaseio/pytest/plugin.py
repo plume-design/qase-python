@@ -154,7 +154,10 @@ class QasePytestPlugin:
 
             if report.failed:
                 if call.excinfo.typename != "AssertionError":
-                    self.set_result("BROKEN")
+                    if not self.runtime.result.known_issue:
+                        self.set_result("BROKEN")
+                    else:
+                        self.set_result("FAILED")
                 else:
                     if self.mark_rerun and not self.runtime.result.known_issue:
                         self.set_result("RERUN")
