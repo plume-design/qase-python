@@ -133,6 +133,8 @@ class Result(object):
         return self.testops_id
 
     def get_duration(self) -> int:
+        if self.results_to_merge:
+            return sum([res.execution.duration for res in self.results_to_merge])
         return self.execution.duration
 
     def get_suite_title(self) -> Optional[str]:

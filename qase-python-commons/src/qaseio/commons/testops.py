@@ -366,7 +366,7 @@ class QaseTestOps:
                         case_id=result.get_testops_id(),
                         status=result.execution.status,
                         stacktrace=result.execution.stacktrace,
-                        time_ms=result.execution.duration,
+                        time_ms=result.get_duration(),
                         comment=result.message,
                         attachments=[attach.hash for attach in attached],
                         defect=self.defect,
@@ -428,7 +428,7 @@ class QaseTestOps:
             return
         test_result.merge_results_completed = True
         # Sort subtests by their statuses. Worst result at the end.
-        item_executions =  [res_to_merge.execution for res_to_merge in test_result.results_to_merge]
+        item_executions = [res_to_merge.execution for res_to_merge in test_result.results_to_merge]
         subtests_status = [execution.status for execution in item_executions]
         subtests_status = list(set(subtests_status))
         subtests_status.sort(key=lambda subtest_status: QASE_STATUS_IDS[subtest_status])
@@ -483,7 +483,7 @@ class QaseTestOps:
 
     @staticmethod
     def merge_test_msg_report(test_result: Result):
-        item_messages =  [res_to_merge.message for res_to_merge in test_result.results_to_merge]
+        item_messages = [res_to_merge.message for res_to_merge in test_result.results_to_merge]
         main_test_message = test_result.message
         for item_msg in item_messages:
             if not item_msg:
