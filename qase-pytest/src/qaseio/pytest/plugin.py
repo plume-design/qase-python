@@ -334,7 +334,6 @@ class QasePytestPlugin:
             self.runtime.result.merge_results = True
             self.runtime.result.merge_results_completed = False
 
-
     def _set_merge_results_completed(self, nextitem: pytest.Item) -> None:
         if not self.runtime.result.merge_results:
             return None
