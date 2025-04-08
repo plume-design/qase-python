@@ -134,8 +134,10 @@ class Result(object):
 
     def get_duration(self) -> int:
         if self.results_to_merge:
-            return sum([res.execution.duration for res in self.results_to_merge])
-        return self.execution.duration
+            duration_time = sum([res.execution.duration for res in self.results_to_merge])
+        else:
+            duration_time = self.execution.duration
+        return (duration_time // 1000) * 1000  # round to 1 second so that results don't overlap
 
     def get_suite_title(self) -> Optional[str]:
         if self.suite:
