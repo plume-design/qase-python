@@ -20,6 +20,7 @@ import certifi
 
 from pkg_resources import DistributionNotFound, get_distribution
 
+from lib_testbed.generic.util.logger import log
 
 QASE_STATUS_IDS = {"skipped": 0, "passed": 1, "failed": 2, "rerun": 3, "blocked": 4, "invalid": 5, "not-applicable": 6}
 
@@ -359,6 +360,14 @@ class QaseTestOps:
                 case_data["suite_title"] = "\t".join(result.get_suite_title().split("."))
 
             try:
+                log.info(
+                    "[Qase] Reporting execution: case_id=%s, status=%s, start time=%s, end time=%s, duration=%s",
+                    result.get_testops_id(),
+                    result.execution.get_status(),
+                    result.execution.start_time,
+                    result.execution.end_time,
+                    result.get_duration(),
+                )
                 api_results.create_result(
                     code=self.project_code,
                     id=self.run_id,
