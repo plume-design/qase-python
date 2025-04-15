@@ -363,10 +363,10 @@ class QaseTestOps:
                 log.info(
                     "[Qase] Reporting execution: case_id=%s, status=%s, start time=%s, end time=%s, duration=%s",
                     result.get_testops_id(),
-                    result.execution.get_status(),
-                    result.execution.start_time,
-                    result.execution.end_time,
-                    result.get_duration(),
+                    result.execution.status,
+                    result.get_start_time(),
+                    result.get_end_time(),
+                    result.get_end_time() - result.get_start_time(),
                 )
                 api_results.create_result(
                     code=self.project_code,
@@ -375,7 +375,9 @@ class QaseTestOps:
                         case_id=result.get_testops_id(),
                         status=result.execution.status,
                         stacktrace=result.execution.stacktrace,
-                        time_ms=result.get_duration(),
+                        start_time=int(result.get_start_time()),
+                        end_time=int(result.get_end_time()),
+                        time_ms=int(result.get_end_time() - result.get_start_time()) * 1000,
                         comment=result.message,
                         attachments=[attach.hash for attach in attached],
                         defect=self.defect,
