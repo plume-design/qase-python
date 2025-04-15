@@ -132,6 +132,19 @@ class Result(object):
             return 0
         return self.testops_id
 
+    def get_start_time(self) -> float:
+        if self.results_to_merge:
+            if not self.execution.start_time:
+                return min([res.execution.start_time for res in self.results_to_merge])
+            # also include the start time of the very first method
+            return min([res.execution.start_time for res in self.results_to_merge] + [self.execution.start_time])
+        return self.execution.start_time
+
+    def get_end_time(self) -> float:
+        if self.results_to_merge:
+            return max([res.execution.end_time for res in self.results_to_merge])
+        return self.execution.end_time
+
     def get_duration(self) -> int:
         if self.results_to_merge:
             duration_time = sum([res.execution.duration for res in self.results_to_merge])
