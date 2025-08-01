@@ -329,6 +329,7 @@ class QasePytestPlugin:
         """Set results merge when:
         - test is written as a class,
         - Test is written as a non-class, but has the same qase-id per all parametrized params.
+        - Test is written as a non-class, and qase-id is set on the parametrize marker in module scope.
         """
         if item.cls or not self.is_qase_id_marked_on_param(item):
             self.runtime.result.merge_results = True
@@ -366,11 +367,35 @@ class QasePytestPlugin:
 
     @staticmethod
     def is_qase_id_marked_on_param(item: pytest.Item) -> bool:
+        from _pytest.fixtures import get_scope_node
+        from _pytest.scope import Scope
+
         if not hasattr(item, "callspec"):
             return True
+
         param_markers = getattr(item.callspec, "marks", None)
         qase_marker = next(filter(lambda marker: marker.name == "qase_id", param_markers), None)
-        return True if qase_marker else False
+        if not qase_marker:
+            return False
+
+        item_module_scope = get_scope_node(item, Scope.Module)
+        module_parametrize_marker = item_module_scope.get_closest_marker("parametrize")
+        if module_parametrize_marker:
+            qase_id_module_scope = next(
+                filter(
+                    lambda module_parametrization: qase_marker
+                    in [nested_marker.mark for nested_marker in module_parametrization.marks],
+                    module_parametrize_marker.args[1],
+                ),
+                None,
+            )
+            # If the qase-id marker is present in the module scope,
+            # then all items in function scope have the same Qase-ID.
+            if qase_id_module_scope:
+                return False
+
+        # Each of items on function scope have its own Qase-ID.
+        return True
 
 
 class QasePytestPluginSingleton:
