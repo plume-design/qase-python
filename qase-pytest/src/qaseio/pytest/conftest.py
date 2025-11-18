@@ -71,11 +71,18 @@ def pytest_configure(config):
                         api_token=config.getoption("qase_testops_api_token"),
                         host=config.getoption("qase_testops_api_host", "qase.io"),
                     )
+                    rerun = []
+                    if config.getoption("qase_testops_rerun_failures") in [True, "true", "True", "1", 1]:
+                        rerun = [
+                            status.strip()
+                            for status in config.getoption("qase_testops_rerun_statuses").split(",")
+                            if status.strip()
+                        ]
                     execution_plan = loader.load(
-                        config.getoption("qase_testops_project"),
-                        config.getoption("qase_testops_plan_id"),
-                        config.getoption("qase_testops_run_id"),
-                        config.getoption("qase_testops_rerun_failures"),
+                        code=config.getoption("qase_testops_project"),
+                        plan_id=config.getoption("qase_testops_plan_id"),
+                        run_id=config.getoption("qase_testops_run_id"),
+                        rerun=rerun,
                     )
                     if not execution_plan:
                         pytest.exit("Qase returned no test cases. Nothing to execute.")
