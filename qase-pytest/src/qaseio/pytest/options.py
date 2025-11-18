@@ -134,7 +134,17 @@ class QasePytestOptions:
             dest="qase_testops_rerun_failures",
             type="bool",
             default=False,
-            help="Select only not (PASSED or FAILED or BLOCKED) test cases from specified run id",
+            help="Select only `--qase-testops-rerun-statuses` test cases from specified run id",
+        )
+
+        QasePytestOptions.add_option_ini(
+            parser,
+            group,
+            "--qase-testops-rerun-statuses",
+            dest="qase_testops_rerun_statuses",
+            type="string",
+            default="untested,retest,skipped,invalid,rerun,not-applicable",
+            help="Tests with which status should be rerun. Only has effect if `--qase-testops-rerun-failures=True`",
         )
 
         QasePytestOptions.add_option_ini(
