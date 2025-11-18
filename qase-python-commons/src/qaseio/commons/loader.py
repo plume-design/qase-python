@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import certifi
 from qaseio.api_client import ApiClient
 from qaseio.configuration import Configuration
