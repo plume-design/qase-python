@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import certifi
+import itertools
+
 from qaseio.api_client import ApiClient
 from qaseio.configuration import Configuration
 from qaseio.api.plans_api import PlansApi
@@ -57,22 +59,28 @@ class TestOpsPlanLoader:
         print(f"[Qase] Getting {code} test cases from {run_id} run: {rerun=}")
         run_cases = []
         try:
-            if not rerun:
-                run_cases = Run(project=code, run_id=run_id).get_cases()
-            else:
-                case_ids = set()
-                for status in rerun:
-                    if status == "untested":
-                        all_cases = Run(project=code, run_id=run_id).get_cases()
-                        all_ran_cases = [r["case_id"] for r in Result(project=code, run_id=run_id).get_results()]
-                        ids = list(set(all_cases).difference(all_ran_cases))
-                    else:
-                        ids = [r["case_id"] for r in Result(project=code, run_id=run_id).get_results(status=status)]
-                    if ids:
-                        print(f"[Qase] Adding {len(ids)} {status.upper()} test cases from {run_id} run: {ids}")
-                        case_ids.update(ids)
-                run_cases = list(case_ids)
+            run_cases = Run(project=code, run_id=run_id).get_cases()
         except ApiException as e:
             print("Unable to load test run data: %s\n" % e)
-        print(f"[Qase] Final number of test cases from {run_id} run to start: {len(run_cases)}")
-        return run_cases
+        if not run_cases:
+            return []
+        if not rerun:
+            return run_cases
+        rerun_cases = []
+        run_results = Result(project=code, run_id=run_id).get_results()
+        run_results.sort(key=lambda result: result["status"])
+        cases_by_status = {
+            status: [result["case_id"] for result in results]
+            for status, results in itertools.groupby(run_results, key=lambda result: result["status"])
+        }
+        for status in rerun:
+            if status == "untested":
+                already_ran = {result["case_id"] for result in run_results}
+                ids = [case_id for case_id in run_cases if case_id not in already_ran]
+            else:
+                ids = cases_by_status.get(status, [])
+            if ids:
+                print(f"[Qase] Adding {len(ids)} {status.upper()} test cases from {run_id} run: {ids}")
+            rerun_cases.extend(ids)
+        print(f"[Qase] Final number of test cases from {run_id} run to start: {len(rerun_cases)}")
+        return rerun_cases
