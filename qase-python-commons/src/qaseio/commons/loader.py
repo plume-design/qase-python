@@ -75,7 +75,7 @@ class TestOpsPlanLoader:
         }
         for status in rerun:
             if status == "untested":
-                already_ran = {result["case_id"] for result in run_results}
+                already_ran = {result["case_id"] for result in run_results if result["status"] != "untested"}
                 ids = [case_id for case_id in run_cases if case_id not in already_ran]
             else:
                 ids = cases_by_status.get(status, [])
